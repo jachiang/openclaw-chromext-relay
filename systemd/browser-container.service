@@ -1,0 +1,22 @@
+[Unit]
+Description=OpenClaw Browser (Podman container)
+After=network.target gateway-socket-relay.service
+Requires=gateway-socket-relay.service
+
+[Service]
+Type=simple
+User=browser-container
+Environment=BROWSER_SOCKET=/tmp/openclaw-chromext-relay.sock
+ExecStartPre=-/usr/bin/podman rm -f browser-container
+ExecStart=/usr/bin/podman run --name browser-container --replace \
+  -v /tmp/openclaw-chromext-relay.sock:/tmp/openclaw-chromext-relay.sock:rw \
+  -e BROWSER_SOCKET=/tmp/openclaw-chromext-relay.sock \
+  -p 127.0.0.1:6080:6080 \
+  --shm-size=2g \
+  browser-container:latest
+ExecStop=/usr/bin/podman stop -t 10 browser-container
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
